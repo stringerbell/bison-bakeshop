@@ -143,8 +143,7 @@ const Checkout = ({selected: {date, available}}) => {
                 <img
                   alt="Cinnamon Rolls"
                   src={rolls}
-                  width="280"
-                  height="320"
+                  width="100%"
                 />
               </div>
             </div>

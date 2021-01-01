@@ -33,6 +33,7 @@ export default function PreOrder() {
     setSelected({})
     setIsOpen(false)
   }
+  Modal.setAppElement('#root');
 
   return (
     <div className={'pre-order-container'}>
@@ -41,7 +42,7 @@ export default function PreOrder() {
         {
           dates.map(({available, date}) => (
             <div key={date}>
-              <button onClick={(e) => onClick(e, date, available)} className={'pre-order-date'}>{date}</button>
+              <button disabled={available === 0} onClick={(e) => onClick(e, date, available)} className={'pre-order-date'}>{date}</button>
               <span className={'qty'}>{qty(available)}</span>
             </div>
           ))
@@ -52,7 +53,7 @@ export default function PreOrder() {
         onRequestClose={closeModal}
         contentLabel="Pre-Order A Roll"
       >
-        <button onClick={closeModal} className={'close-modal-btn'}>Close</button>
+        <div onClick={closeModal} className={'close-modal-btn'}>✖</div>
         <Checkout selected={selected}/>
       </Modal>
     </div>
