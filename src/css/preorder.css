@@ -14,5 +14,14 @@
   font-style: italic;
 }
 .close-modal-btn {
-  margin-left: auto;
+  color: black;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.pre-order-list {
+  display: flex;
+  flex-direction: column;
+  margin-block: unset;
+  padding-inline-start: unset;
 }

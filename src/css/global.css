@@ -331,7 +331,6 @@ pre {
     flex-direction: column;
     justify-content: flex-start;
     padding: 48px 20px;
-    min-width: 320px;
   }
 
   .sr-header__logo {
@@ -467,9 +466,7 @@ pre {
 
 /* Custom */
 .container {
-  border: 1px solid #e8e8e8;
   border-radius: 6px;
-  padding: 32px 28px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
