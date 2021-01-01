@@ -26,7 +26,6 @@ export default function PreOrder() {
   }
 
   const onClick = (event, date, available) => {
-    console.log(event.target, {date, available})
     setSelected({date, available})
     setIsOpen(true)
   }
@@ -41,11 +40,10 @@ export default function PreOrder() {
       <ul className={'pre-order-list'}>
         {
           dates.map(({available, date}) => (
-            <>
-              <button onClick={(e) => onClick(e, date, available)} key={date}
-                      className={'pre-order-date'}>{date}</button>
+            <div key={date}>
+              <button onClick={(e) => onClick(e, date, available)} className={'pre-order-date'}>{date}</button>
               <span className={'qty'}>{qty(available)}</span>
-            </>
+            </div>
           ))
         }
       </ul>
