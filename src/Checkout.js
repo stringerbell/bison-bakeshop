@@ -173,15 +173,18 @@ const Checkout = ({selected: {date, available}}) => {
             </div>
             <p className="sr-legal-text">Number of rolls (max {Math.min(available, 12)})</p>
 
+            <p className={'price'}>{`${state.price || ''}`}</p>
+            <p className={''}>I'll need a credit card to confirm your order. It won't be charged until pickup.</p>
+
             <button
               role="link"
-              onClick={handleClick}
               disabled={!state.stripe || state.loading}
-            >
-              {state.loading || !state.price
-                ? `Loading...`
-                : `Buy for ${state.price}`}
+              onClick={handleClick}
+            >{state.loading || !state.price
+              ? `Loading...`
+              : `Reserve my rolls`}
             </button>
+
             <div className="sr-field-error">{state.error?.message}</div>
           </section>
         </div>
