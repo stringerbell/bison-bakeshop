@@ -24,4 +24,19 @@
   flex-direction: column;
   margin-block: unset;
   padding-inline-start: unset;
+  margin-bottom: 1em;
+}
+
+.qty {
+  font-style: italic;
+  font-weight: 300;
+}
+.price {
+  justify-content: center;
+  text-align: center;
+  display: flex;
+  color: var(--font-color);
+  font-size: var(--big-font);
+  font-family: "Crimson Text";
+  font-style: italic;
 }
