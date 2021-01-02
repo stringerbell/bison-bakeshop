@@ -1,19 +1,36 @@
-import React from "react";
+import React, {useEffect, useReducer} from 'react';
 import Modal from 'react-modal';
 import Checkout from "./Checkout";
 import "./css/preorder.css";
 
+function reducer(state, action) {
+  switch (action.type) {
+    case 'useEffectUpdate':
+      return action.payload;
+    default:
+      return [];
+  }
+}
+
 export default function PreOrder() {
   const [modalIsOpen, setIsOpen] = React.useState(false);
   const [selected, setSelected] = React.useState({})
+  const [dates, dispatch] = useReducer(reducer, []);
 
-  const dates = [
-    {date: 'Sunday, January 3, 2021', available: 0},
-    {date: 'Sunday, January 10, 2021', available: 3},
-    {date: 'Sunday, January 17, 2021', available: 24},
-    {date: 'Sunday, January 24, 2021', available: 24},
-    {date: 'Sunday, January 31, 2021', available: 24}
-  ]
+  useEffect(() => {
+    async function fetchPreSales() {
+      // Fetch dates/availability from our backend.
+      const dates = await fetch(
+        '/pre-sales'
+      ).then((res) => res.json());
+      dispatch({
+        type: 'useEffectUpdate',
+        payload: dates,
+      });
+    }
+
+    fetchPreSales();
+  }, []);
 
   const qty = available => {
     if (available === 0) {
