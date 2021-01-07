@@ -99,7 +99,7 @@ const Checkout = ({selected: {date, available, id}}) => {
     async function fetchConfig() {
       // Fetch config from our backend.
       const {publicKey, unitAmount, discountAmount, currency} = await fetch(
-        '/config'
+        'https://app.dannstockton.com/b/config'
       ).then((res) => res.json());
       // Make sure to call `loadStripe` outside of a component’s render to avoid
       // recreating the `Stripe` object on every render.
