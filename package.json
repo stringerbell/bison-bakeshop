@@ -22,7 +22,7 @@
     "predeploy": "yarn build",
     "deploy": "gh-pages -d build"
   },
-  "proxy": "http://0.0.0.0:4242",
+  "proxy": "https://app.dannstockton.com/b/",
   "eslintConfig": {
     "extends": [
       "react-app",

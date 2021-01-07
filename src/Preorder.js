@@ -42,8 +42,8 @@ export default function PreOrder() {
     return `${available} available`;
   }
 
-  const onClick = (event, date, available) => {
-    setSelected({date, available})
+  const onClick = (event, {date, id, available}) => {
+    setSelected({date, available, id})
     setIsOpen(true)
   }
   const closeModal = () => {
@@ -57,9 +57,9 @@ export default function PreOrder() {
       <p className={'p'}>Pre-order cinnamon rolls:</p>
       <ul className={'pre-order-list'}>
         {
-          dates.map(({available, date}) => (
-            <div key={date}>
-              <button disabled={available === 0} onClick={(e) => onClick(e, date, available)} className={'pre-order-date'}>{date}</button>
+          dates.map(({available, date, id}) => (
+            <div key={id}>
+              <button disabled={available === 0} onClick={(e) => onClick(e, {date, id, available})} className={'pre-order-date'}>{date}</button>
               <span className={'qty'}>{qty(available)}</span>
             </div>
           ))
@@ -71,7 +71,7 @@ export default function PreOrder() {
         contentLabel="Pre-Order A Roll"
       >
         <div onClick={closeModal} className={'close-modal-btn'}>✖</div>
-        <Checkout selected={selected}/>
+        <Checkout selected={selected} />
       </Modal>
     </div>
   );

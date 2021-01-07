@@ -4,7 +4,7 @@ import rolls from './img/rolls.jpg';
 import RenderIf from "./RenderIf";
 import OutOfStock from "./OutOfStock";
 
-const fetchCheckoutSession = async ({quantity, date}) => {
+const fetchCheckoutSession = async ({quantity, date, id}) => {
   return fetch('/create-checkout-session', {
     method: 'POST',
     headers: {
@@ -12,7 +12,8 @@ const fetchCheckoutSession = async ({quantity, date}) => {
     },
     body: JSON.stringify({
       quantity,
-      date
+      id,
+      date,
     }),
   }).then((res) => res.json());
 };
@@ -84,7 +85,7 @@ function reducer(state, action) {
   }
 }
 
-const Checkout = ({selected: {date, available}}) => {
+const Checkout = ({selected: {date, available, id}}) => {
   const [state, dispatch] = useReducer(reducer, {
     quantity: 1,
     price: null,
@@ -116,6 +117,7 @@ const Checkout = ({selected: {date, available}}) => {
     dispatch({type: 'setLoading', payload: {loading: true}});
     const {sessionId} = await fetchCheckoutSession({
       quantity: state.quantity,
+      id,
       date: (new Date(date)).toISOString(),
     });
     // When the customer clicks on the button, redirect them to Checkout.
