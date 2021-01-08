@@ -264,7 +264,7 @@ func sendEmail(event stripe.CheckoutSession) {
 
 	m := mail.NewV3Mail()
 	from := mail.NewEmail("Bison Bakeshop", os.Getenv("FROM_EMAIL"))
-	m.SetReplyTo(mail.NewEmail("Dann Stockton", os.Getenv("FROM_EMAIL")))
+	m.SetReplyTo(mail.NewEmail("Dann", os.Getenv("REPLY_TO")))
 	content := mail.NewContent("text/plain", fmt.Sprintf(`
 Thanks for your pre-order!
 
@@ -283,7 +283,6 @@ Dann
 `, date.Format(layout), qty, p/100, os.Getenv("PICKUP_ADDRESS"), os.Getenv("SUPPORT_PHONE")),
 	)
 	m.SetFrom(from)
-	m.SetReplyTo(mail.NewEmail("Dann", os.Getenv("REPLY_TO")))
 	m.AddContent(content)
 	personalization := mail.NewPersonalization()
 	personalization.AddTos(mail.NewEmail("", c.Email))
