@@ -21,7 +21,7 @@ export default function PreOrder() {
     async function fetchPreSales() {
       // Fetch dates/availability from our backend.
       const dates = await fetch(
-        'https://app.dannstockton.com/b/pre-sales'
+        '/pre-sales'
       ).then((res) => res.json());
       dispatch({
         type: 'useEffectUpdate',
