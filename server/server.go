@@ -291,11 +291,11 @@ Dann
 	m.AddPersonalizations(personalization)
 	client := sendgrid.NewSendClient(os.Getenv("SENDGRID_API_KEY"))
 	re, err := client.Send(m)
-	re = re
 	if err != nil {
-		log.Printf("client.Send: %v", err)
+		log.Printf("client.Send err: %v", err)
 		return
 	}
+	log.Printf(strconv.Itoa(re.StatusCode))
 }
 
 func addPreorder(event stripe.CheckoutSession) {
