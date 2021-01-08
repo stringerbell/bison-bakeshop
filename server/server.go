@@ -283,6 +283,7 @@ Dann
 `, date.Format(layout), qty, p/100, os.Getenv("PICKUP_ADDRESS"), os.Getenv("SUPPORT_PHONE")),
 	)
 	m.SetFrom(from)
+	m.SetReplyTo(mail.NewEmail("Dann", os.Getenv("REPLY_TO")))
 	m.AddContent(content)
 	personalization := mail.NewPersonalization()
 	personalization.AddTos(mail.NewEmail("", c.Email))
