@@ -22,7 +22,7 @@
     "predeploy": "yarn build",
     "deploy": "gh-pages -d build"
   },
-  "proxy": "localhost:4242",
+  "proxy": "http://localhost:4242",
   "eslintConfig": {
     "extends": [
       "react-app",
