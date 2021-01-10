@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"context"
+	"crypto/subtle"
 	"encoding/json"
 	"fmt"
 	"github.com/jackc/pgx/v4"
@@ -17,7 +18,10 @@ import (
 	"io"
 	"io/ioutil"
 	"log"
+	"mime"
+	"mime/multipart"
 	"net/http"
+	netmail "net/mail"
 	"os"
 	"strconv"
 	"time"
@@ -45,9 +49,110 @@ func main() {
 	http.HandleFunc("/checkout-session", handleCheckoutSession)
 	http.HandleFunc("/create-checkout-session", handleCreateCheckoutSession)
 	http.HandleFunc("/webhook", handleWebhook)
+	http.HandleFunc("/incoming-email", handleIncomingEmail)
 
 	log.Println("server running at 0.0.0.0:4242")
 	http.ListenAndServe("0.0.0.0:4242", nil)
+}
+
+func handleIncomingEmail(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		return
+	}
+
+	q := r.URL.Query()
+	// make sure we have a key query param
+	if len(q["key"]) < 1 {
+		w.WriteHeader(http.StatusForbidden)
+		return
+	}
+
+	// make sure it matches ours
+	if subtle.ConstantTimeCompare([]byte(q["key"][0]), []byte(os.Getenv("INCOMING_EMAIL_KEY"))) != 1 {
+		w.WriteHeader(http.StatusForbidden)
+		return
+	}
+	_, params, err := mime.ParseMediaType(r.Header.Get(http.CanonicalHeaderKey("content-type")))
+	mr := multipart.NewReader(r.Body, params["boundary"])
+	if err != nil {
+		fmt.Printf("multipart.NewReader: %v", err)
+		return
+	}
+	emailMap := map[string][]byte{}
+	for {
+		p, err := mr.NextPart()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			fmt.Printf("mr.NextPart: %v", err)
+			return
+		}
+		slurp, err := ioutil.ReadAll(p)
+		if err != nil {
+			fmt.Printf("ioutil.ReadAll: %v", err)
+			return
+		}
+		_, ps, _ := mime.ParseMediaType(p.Header.Get(http.CanonicalHeaderKey("content-disposition")))
+		emailMap[ps["name"]] = slurp
+	}
+
+	go forwardEmail(emailMap)
+	writeJSON(w, "200 👍🏻")
+}
+
+func forwardEmail(emailMap map[string][]byte) {
+	m := mail.NewV3Mail()
+	a, err := netmail.ParseAddress(string(emailMap["from"]))
+	if err != nil {
+		log.Printf("netmail.ParseAddress: %v", err)
+		return
+	}
+	from := mail.NewEmail(a.Name, a.Address)
+	m.SetFrom(mail.NewEmail("Dann", os.Getenv("FROM_EMAIL")))
+	m.SetReplyTo(from)
+
+	r := bytes.NewReader(emailMap["email"])
+	parsed, err := netmail.ReadMessage(r)
+	if err != nil {
+		log.Printf("netmail.ReadMessage: %v", err)
+		return
+	}
+	_, params, err := mime.ParseMediaType(parsed.Header.Get(http.CanonicalHeaderKey("content-type")))
+	if err != nil {
+		fmt.Printf("multipart.NewReader: %v", err)
+		return
+	}
+	mr := multipart.NewReader(parsed.Body, params["boundary"])
+	for {
+		p, err := mr.NextPart()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			fmt.Printf("mr.NextPart: %v", err)
+			return
+		}
+		slurp, err := ioutil.ReadAll(p)
+		if err != nil {
+			fmt.Printf("ioutil.ReadAll: %v", err)
+			return
+		}
+		mt, _, _ := mime.ParseMediaType(p.Header.Get(http.CanonicalHeaderKey("content-type")))
+		m.AddContent(mail.NewContent(mt, string(slurp)))
+	}
+	personalization := mail.NewPersonalization()
+	personalization.Subject = string(emailMap["subject"])
+	personalization.AddTos(mail.NewEmail("Dann", os.Getenv("FORWARD_TO_EMAIL")))
+	m.AddPersonalizations(personalization)
+	client := sendgrid.NewSendClient(os.Getenv("SENDGRID_API_KEY"))
+	re, err := client.Send(m)
+	if err != nil {
+		log.Printf("client.Send err: %v", err)
+		return
+	}
+	log.Printf(strconv.Itoa(re.StatusCode))
 }
 
 // ErrorResponseMessage represents the structure of the error
