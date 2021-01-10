@@ -184,6 +184,7 @@ func handlePreSales(w http.ResponseWriter, r *http.Request) {
            to_char(presales.date, 'Dy, Mon DD, YYYY')
     from bakery.orders
              right join bakery.presales on presale_id = presales.id
+    where presales.deleted = false
     group by bakery.orders.presale_id, presales.id
     order by presale_id`,
 		)
