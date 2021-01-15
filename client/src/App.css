@@ -2,6 +2,10 @@
   overflow: hidden;
 }
 
+html {
+  background: #f9f9f9;
+}
+
 .App {
   text-align: center;
   background: #f9f9f9;
@@ -19,7 +23,6 @@
   align-items: center;
   justify-content: center;
   font-size: calc(10px + 2vmin);
-  color: white;
 }
 
 .App-link {

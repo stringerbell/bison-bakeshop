@@ -1,14 +1,14 @@
-import React, {useEffect, useReducer} from 'react';
-import {loadStripe} from '@stripe/stripe-js';
-import rolls from './img/rolls.jpg';
+import React, { useEffect, useReducer } from "react";
+import { loadStripe } from "@stripe/stripe-js";
+import rolls from "./img/rolls.jpg";
 import RenderIf from "./RenderIf";
 import OutOfStock from "./OutOfStock";
 
-const fetchCheckoutSession = async ({quantity, date, id}) => {
-  return fetch('/create-checkout-session', {
-    method: 'POST',
+const fetchCheckoutSession = async ({ quantity, date, id }) => {
+  return fetch("/create-checkout-session", {
+    method: "POST",
     headers: {
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json",
     },
     body: JSON.stringify({
       quantity,
@@ -18,22 +18,22 @@ const fetchCheckoutSession = async ({quantity, date, id}) => {
   }).then((res) => res.json());
 };
 
-const formatPrice = ({amount, discountAmount, currency, quantity}) => {
-  const numberFormat = new Intl.NumberFormat('en-US', {
-    style: 'currency',
+const formatPrice = ({ amount, discountAmount, currency, quantity }) => {
+  const numberFormat = new Intl.NumberFormat("en-US", {
+    style: "currency",
     currency,
-    currencyDisplay: 'symbol',
+    currencyDisplay: "symbol",
   });
   const parts = numberFormat.formatToParts(amount);
   let zeroDecimalCurrency = true;
   for (let part of parts) {
-    if (part.type === 'decimal') {
+    if (part.type === "decimal") {
       zeroDecimalCurrency = false;
     }
   }
   amount = zeroDecimalCurrency ? amount : amount / 100;
   discountAmount = zeroDecimalCurrency ? discountAmount : discountAmount / 100;
-  let total = (amount * quantity);
+  let total = amount * quantity;
   if (quantity > 3) {
     total = quantity * discountAmount;
   }
@@ -43,7 +43,7 @@ const formatPrice = ({amount, discountAmount, currency, quantity}) => {
 
 function reducer(state, action) {
   switch (action.type) {
-    case 'useEffectUpdate':
+    case "useEffectUpdate":
       return {
         ...state,
         ...action.payload,
@@ -54,7 +54,7 @@ function reducer(state, action) {
           quantity: state.quantity,
         }),
       };
-    case 'increment':
+    case "increment":
       return {
         ...state,
         quantity: state.quantity + 1,
@@ -65,7 +65,7 @@ function reducer(state, action) {
           quantity: state.quantity + 1,
         }),
       };
-    case 'decrement':
+    case "decrement":
       return {
         ...state,
         quantity: state.quantity - 1,
@@ -76,16 +76,16 @@ function reducer(state, action) {
           quantity: state.quantity - 1,
         }),
       };
-    case 'setLoading':
-      return {...state, loading: action.payload.loading};
-    case 'setError':
-      return {...state, error: action.payload.error};
+    case "setLoading":
+      return { ...state, loading: action.payload.loading };
+    case "setError":
+      return { ...state, error: action.payload.error };
     default:
       throw new Error();
   }
 }
 
-const Checkout = ({selected: {date, available, id}}) => {
+const Checkout = ({ selected: { date, available, id } }) => {
   const [state, dispatch] = useReducer(reducer, {
     quantity: 1,
     price: null,
@@ -98,14 +98,19 @@ const Checkout = ({selected: {date, available, id}}) => {
   useEffect(() => {
     async function fetchConfig() {
       // Fetch config from our backend.
-      const {publicKey, unitAmount, discountAmount, currency} = await fetch(
-        '/config'
+      const { publicKey, unitAmount, discountAmount, currency } = await fetch(
+        "/config"
       ).then((res) => res.json());
       // Make sure to call `loadStripe` outside of a component’s render to avoid
       // recreating the `Stripe` object on every render.
       dispatch({
-        type: 'useEffectUpdate',
-        payload: {unitAmount, discountAmount, currency, stripe: await loadStripe(publicKey)},
+        type: "useEffectUpdate",
+        payload: {
+          unitAmount,
+          discountAmount,
+          currency,
+          stripe: await loadStripe(publicKey),
+        },
       });
     }
 
@@ -114,27 +119,27 @@ const Checkout = ({selected: {date, available, id}}) => {
 
   const handleClick = async (event) => {
     // Call your backend to create the Checkout session.
-    dispatch({type: 'setLoading', payload: {loading: true}});
-    const {sessionId} = await fetchCheckoutSession({
+    dispatch({ type: "setLoading", payload: { loading: true } });
+    const { sessionId } = await fetchCheckoutSession({
       quantity: state.quantity,
       id,
-      date: (new Date(date)).toISOString(),
+      date: new Date(date).toISOString(),
     });
     // When the customer clicks on the button, redirect them to Checkout.
-    const {error} = await state.stripe.redirectToCheckout({
+    const { error } = await state.stripe.redirectToCheckout({
       sessionId,
     });
     // If `redirectToCheckout` fails due to a browser or network
     // error, display the localized error message to your customer
     // using `error.message`.
     if (error) {
-      dispatch({type: 'setError', payload: {error}});
-      dispatch({type: 'setLoading', payload: {loading: false}});
+      dispatch({ type: "setError", payload: { error } });
+      dispatch({ type: "setLoading", payload: { loading: false } });
     }
   };
 
   return (
-    <RenderIf condition={available !== 0} fallback={<OutOfStock/>}>
+    <RenderIf condition={available !== 0} fallback={<OutOfStock />}>
       <div className="sr-root">
         <div className="sr-main">
           <section className="container">
@@ -142,18 +147,14 @@ const Checkout = ({selected: {date, available, id}}) => {
               <h1>Cinnamon Roll</h1>
               <h4>Pre-order a cinnamon roll for {date}</h4>
               <div className="pasha-image">
-                <img
-                  alt="Cinnamon Rolls"
-                  src={rolls}
-                  width="100%"
-                />
+                <img alt="Cinnamon Rolls" src={rolls} width="100%" />
               </div>
             </div>
             <div className="quantity-setter">
               <button
                 className="increment-btn"
                 disabled={state.quantity === 1}
-                onClick={() => dispatch({type: 'decrement'})}
+                onClick={() => dispatch({ type: "decrement" })}
               >
                 -
               </button>
@@ -168,23 +169,29 @@ const Checkout = ({selected: {date, available, id}}) => {
               <button
                 className="increment-btn"
                 disabled={state.quantity === Math.min(available, 12)}
-                onClick={() => dispatch({type: 'increment'})}
+                onClick={() => dispatch({ type: "increment" })}
               >
                 +
               </button>
             </div>
-            <p className="sr-legal-text">Number of rolls (max {Math.min(available, 12)})</p>
+            <p className="sr-legal-text">
+              Number of rolls (max {Math.min(available, 12)})
+            </p>
 
-            <p className={'price'}>{`${state.price || ''}`}</p>
-            <p className={''}>I'll need a credit card to confirm your order. It won't be charged until pickup.</p>
+            <p className={"price"}>{`${state.price || ""}`}</p>
+            <p className={""}>
+              I'll need a credit card to confirm your order. It won't be charged
+              until pickup.
+            </p>
 
             <button
               role="link"
               disabled={!state.stripe || state.loading}
               onClick={handleClick}
-            >{state.loading || !state.price
-              ? `Loading...`
-              : `Reserve my rolls`}
+            >
+              {state.loading || !state.price
+                ? `Loading...`
+                : `Reserve my rolls`}
             </button>
 
             <div className="sr-field-error">{state.error?.message}</div>
