@@ -5,7 +5,9 @@ import (
 	"context"
 	"crypto/subtle"
 	"encoding/json"
+	"errors"
 	"fmt"
+	"github.com/jackc/pgconn"
 	"github.com/jackc/pgx/v4"
 	"github.com/joho/godotenv"
 	"github.com/sendgrid/sendgrid-go"
@@ -50,9 +52,61 @@ func main() {
 	http.HandleFunc("/create-checkout-session", handleCreateCheckoutSession)
 	http.HandleFunc("/webhook", handleWebhook)
 	http.HandleFunc("/incoming-email", handleIncomingEmail)
+	http.HandleFunc("/account", handleCreateAccount)
 
 	log.Println("server running at 0.0.0.0:4242")
 	http.ListenAndServe("0.0.0.0:4242", nil)
+}
+
+type accountCreateBody struct {
+	SessionID string `json:"sessionID"`
+	Email     string `json:"email"`
+}
+
+func handleCreateAccount(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		return
+	}
+	j := accountCreateBody{}
+	json.NewDecoder(r.Body).Decode(&j)
+	if j.SessionID == "" || j.Email == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	s, err := session.Get(j.SessionID, nil)
+	if err != nil {
+		fmt.Printf("session.Get: %w", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	if s == nil || s.Customer == nil {
+		fmt.Printf("nil session or customer: %v", s)
+		w.WriteHeader(http.StatusNotFound)
+		return
+	}
+	_, err = conn.Exec(context.Background(), `
+  insert into bakery.accounts (customer, email) values ($1, $2)`,
+		s.Customer.ID,
+		j.Email,
+	)
+	if err != nil {
+		fmt.Printf("conn.Query: %v", err)
+		var pgErr *pgconn.PgError
+		if errors.As(err, &pgErr) {
+			if pgErr.Code == "23505" {
+				writeJSONError(w, struct {
+					Error string `json:"error"`
+				}{Error: "would you like to login?"}, http.StatusConflict)
+				return
+			}
+		}
+		writeJSONError(w, struct {
+			Error string `json:"error"`
+		}{Error: "unable to save your account"}, http.StatusInternalServerError)
+		return
+	}
+	writeJSON(w, nil)
 }
 
 func handleIncomingEmail(w http.ResponseWriter, r *http.Request) {
@@ -243,8 +297,16 @@ func handleCheckoutSession(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	sessionID := r.URL.Query().Get("sessionId")
-	fmt.Println(sessionID)
 	s, _ := session.Get(sessionID, nil)
+	var c *stripe.Customer
+	var email string
+	if s.Customer != nil {
+		c, _ = customer.Get(s.Customer.ID, nil)
+		if c != nil {
+			email = c.Email
+		}
+	}
+	s.CustomerEmail = email
 	writeJSON(w, s)
 }
 
@@ -292,7 +354,7 @@ func handleCreateCheckoutSession(w http.ResponseWriter, r *http.Request) {
 		PaymentMethodTypes: stripe.StringSlice([]string{
 			"card",
 		}),
-		SuccessURL: stripe.String(domainURL),
+		SuccessURL: stripe.String(domainURL + "/success?s={CHECKOUT_SESSION_ID}"),
 	}
 	s, err := session.New(params)
 	if err != nil {
@@ -396,12 +458,16 @@ Dann
 	personalization.Subject = "Your cinnamon roll pre-order for " + date.Format(layout)
 	m.AddPersonalizations(personalization)
 	client := sendgrid.NewSendClient(os.Getenv("SENDGRID_API_KEY"))
-	re, err := client.Send(m)
-	if err != nil {
-		log.Printf("client.Send err: %v", err)
-		return
+	if os.Getenv("NAME") == "prod" {
+		re, err := client.Send(m)
+		if err != nil {
+			log.Printf("client.Send err: %v", err)
+			return
+		}
+		log.Printf(strconv.Itoa(re.StatusCode))
+	} else {
+		fmt.Printf("would send: %v", m)
 	}
-	log.Printf(strconv.Itoa(re.StatusCode))
 }
 
 func addPreorder(event stripe.CheckoutSession) {
@@ -417,15 +483,13 @@ func addPreorder(event stripe.CheckoutSession) {
 	id := event.Metadata["id"]
 	qty := event.Metadata["qty"]
 	p := event.Metadata["price"]
-	ct, err := conn.Exec(context.Background(),
+	conn.Exec(context.Background(),
 		`
       insert into bakery.orders (email, presale_id, qty, price, customer_id, session_id)
       values ($1, $2, $3, $4, $5, $6)
     `,
 		c.Email, id, qty, p, c.ID, event.ID,
 	)
-
-	fmt.Println(c, event, ct, "err", err)
 }
 
 func writeJSON(w http.ResponseWriter, v interface{}) {
