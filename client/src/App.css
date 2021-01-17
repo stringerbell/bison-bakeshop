@@ -23,8 +23,16 @@ html {
   align-items: center;
   justify-content: center;
   font-size: calc(10px + 2vmin);
+  margin-top: -10rem;
 }
 
 .App-link {
   color: #61dafb;
+}
+
+.login-link {
+  margin-top: 1rem;
+  margin-right: 1rem;
+  display: flex;
+  justify-content: flex-end;
 }
