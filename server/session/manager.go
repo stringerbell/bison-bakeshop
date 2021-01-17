@@ -84,7 +84,8 @@ func (m *Manager) SessionDestroy(w http.ResponseWriter, r *http.Request) {
 	}
 	m.lock.Lock()
 	defer m.lock.Unlock()
-	m.provider.SessionDestroy(cookie.Value)
+	sid, _ := url.QueryUnescape(cookie.Value)
+	m.provider.SessionDestroy(sid)
 	c := http.Cookie{
 		Name:    m.cookieName,
 		Path:    "/",
