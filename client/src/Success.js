@@ -21,7 +21,10 @@ export default function Success() {
       const res = await fetch(
         "/api/checkout-session?sessionId=" + sessionID
       ).then((res) => res.json());
-      // setSession(res);
+      if (res.error) {
+        window.location.href = '/'
+        return
+      }
       setEmail(res.customer_email);
     }
 

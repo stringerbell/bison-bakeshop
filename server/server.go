@@ -248,13 +248,13 @@ Hello!
 
 A login has been requested for bison bakeshop. Please click the link below to login.
 
-https://bisonbakeshop.com/login/%s
+%s/login/%s
 
 If you didn't request this, you can safely ignore this, and, I'd appreciate a heads up, so I can look into it.
 
 Thank you!
 Dann
-`, base64.URLEncoding.EncodeToString([]byte(loginLink))))
+`, os.Getenv("DOMAIN"), base64.URLEncoding.EncodeToString([]byte(loginLink))))
 
 	m.SetFrom(from)
 	m.AddContent(content)
@@ -507,7 +507,16 @@ func handleCheckoutSession(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	sessionID := r.URL.Query().Get("sessionId")
-	s, _ := session.Get(sessionID, nil)
+	s, err := session.Get(sessionID, nil)
+	if err != nil {
+	  var sError *stripe.Error
+    if errors.As(err, &sError) {
+      writeJSONErrorMessage(w, sError.Msg, sError.HTTPStatusCode)
+      return
+    }
+    writeJSONErrorMessage(w, err.Error(), http.StatusBadRequest)
+    return
+  }
 	var c *stripe.Customer
 	var email string
 	if s.Customer != nil {
