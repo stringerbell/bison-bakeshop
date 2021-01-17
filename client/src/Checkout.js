@@ -125,6 +125,12 @@ const Checkout = ({ selected: { date, available, id } }) => {
       id,
       date: new Date(date).toISOString(),
     });
+    if (sessionId === undefined) {
+      // TODO make this clearer. This means they are logged in
+      dispatch({ type: "setLoading", payload: { loading: false } });
+      window.location.reload();
+      return
+    }
     // When the customer clicks on the button, redirect them to Checkout.
     const { error } = await state.stripe.redirectToCheckout({
       sessionId,
