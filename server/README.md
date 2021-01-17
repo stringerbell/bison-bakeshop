@@ -37,3 +37,8 @@ go run server.go
 
 4. If you're using the html client, go to `localhost:4242` to see the demo. For
    react, visit `localhost:3000`.
+
+5. Run to receive webhooks locally 
+```
+stripe listen --forward-to http://localhost:4242/webhook --events checkout.session.completed
+```
