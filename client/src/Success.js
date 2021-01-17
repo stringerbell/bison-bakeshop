@@ -30,7 +30,7 @@ export default function Success() {
 
   const createAccount = async () => {
     setForm({ ...form, loading: true });
-    await fetch("/account", {
+    await fetch("/api/account", {
       method: "POST",
       body: JSON.stringify({ sessionId: sessionID, email }),
     })

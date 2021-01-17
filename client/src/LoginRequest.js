@@ -6,7 +6,7 @@ export default function LoginRequest() {
   const [location, setLocation] = useState(null);
   useEffect(() => {
     async function loginRequest() {
-      await fetch("/session", {
+      await fetch("/api/session", {
         method: "POST",
         body: JSON.stringify({ token }),
       })

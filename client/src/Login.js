@@ -9,7 +9,7 @@ export default function Login() {
   const [email, setEmail] = useState(search.replace("?email=", ""));
   const [complete, setComplete] = useState(false);
   useEffect(() => {
-    fetch("/me")
+    fetch("/api/me")
       .then((r) => r.json())
       .then((j) => {
         if (j.logged_in) {
@@ -19,7 +19,7 @@ export default function Login() {
   }, []);
   const onClick = (e) => {
     e.preventDefault();
-    fetch("/login", {
+    fetch("/api/login", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

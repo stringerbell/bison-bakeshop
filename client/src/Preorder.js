@@ -25,7 +25,7 @@ export default function PreOrder() {
   useEffect(() => {
     async function fetchPreSales() {
       // Fetch dates/availability from our backend.
-      const dates = await fetch("/pre-sales").then((res) => res.json());
+      const dates = await fetch("/api/pre-sales").then((res) => res.json());
       dispatch({
         type: "useEffectUpdate",
         payload: dates,
@@ -37,7 +37,7 @@ export default function PreOrder() {
 
   useEffect(() => {
     async function fetchID() {
-      const response = await fetch("/me").then((r) => r.json());
+      const response = await fetch("/api/me").then((r) => r.json());
       setID(response);
     }
     fetchID();

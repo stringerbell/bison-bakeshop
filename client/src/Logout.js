@@ -7,7 +7,7 @@ export default function Logout() {
   useEffect(() => {
     async function logout() {
       // Fetch config from our backend.
-      await fetch("/logout")
+      await fetch("/api/logout")
         .then((res) => res.json())
         .then(() => setComplete(true));
     }
