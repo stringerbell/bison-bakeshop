@@ -19,7 +19,7 @@ export default function Success() {
   useEffect(() => {
     async function fetchSession() {
       const res = await fetch(
-        "/checkout-session?sessionId=" + sessionID
+        "/api/checkout-session?sessionId=" + sessionID
       ).then((res) => res.json());
       // setSession(res);
       setEmail(res.customer_email);
