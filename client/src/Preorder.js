@@ -17,6 +17,7 @@ function reducer(state, action) {
 }
 
 export default function PreOrder() {
+  const [soldOut, setSoldOut] = useState(false);
   const [id, setID] = useState({});
   const [modalIsOpen, setIsOpen] = useState(false);
   const [selected, setSelected] = useState({});
@@ -30,6 +31,10 @@ export default function PreOrder() {
         type: "useEffectUpdate",
         payload: dates,
       });
+      let total = dates.reduce((available, date) => {
+        return available + date.available
+      }, 0);
+      setSoldOut(total === 0)
     }
 
     fetchPreSales();
@@ -44,7 +49,7 @@ export default function PreOrder() {
   }, []);
 
   const qty = (available) => {
-    if (available === 0) {
+    if (available <= 0) {
       return "Sold Out!";
     }
     if (available <= 6) {
@@ -65,17 +70,19 @@ export default function PreOrder() {
 
   return (
     <>
-      <RenderIf
-        condition={!id.logged_in}
-        fallback={
-          <Link className={"login-link"} to={"/logout"}>
-            <button>Logout</button>
+      <RenderIf condition={!soldOut} fallback={null}>
+        <RenderIf
+          condition={!id.logged_in}
+          fallback={
+            <Link className={"login-link"} to={"/logout"}>
+              <button>Logout</button>
+            </Link>
+          }
+        >
+          <Link className={"login-link"} to={"/login"}>
+            <button>Login</button>
           </Link>
-        }
-      >
-        <Link className={"login-link"} to={"/login"}>
-          <button>Login</button>
-        </Link>
+        </RenderIf>
       </RenderIf>
       <header className="App-header">
         <img src={logo} className="App-logo" alt="logo" />
