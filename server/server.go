@@ -451,7 +451,7 @@ func handlePreSales(w http.ResponseWriter, r *http.Request) {
              right join bakery.presales on presale_id = presales.id
     where presales.deleted = false
     group by bakery.orders.presale_id, presales.id
-    order by presale_id`,
+    order by date`,
 	)
 	if err != nil {
 		log.Fatal("conn.Query", err)
@@ -509,14 +509,14 @@ func handleCheckoutSession(w http.ResponseWriter, r *http.Request) {
 	sessionID := r.URL.Query().Get("sessionId")
 	s, err := session.Get(sessionID, nil)
 	if err != nil {
-	  var sError *stripe.Error
-    if errors.As(err, &sError) {
-      writeJSONErrorMessage(w, sError.Msg, sError.HTTPStatusCode)
-      return
-    }
-    writeJSONErrorMessage(w, err.Error(), http.StatusBadRequest)
-    return
-  }
+		var sError *stripe.Error
+		if errors.As(err, &sError) {
+			writeJSONErrorMessage(w, sError.Msg, sError.HTTPStatusCode)
+			return
+		}
+		writeJSONErrorMessage(w, err.Error(), http.StatusBadRequest)
+		return
+	}
 	var c *stripe.Customer
 	var email string
 	if s.Customer != nil {
